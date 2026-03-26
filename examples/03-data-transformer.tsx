@@ -9,7 +9,7 @@
 
 "use client";
 
-import AcroFormPreview, { DataTransformer, FormData } from "react-pdf-form-preview";
+import AcroFormPreview, { DataTransformer, PdfFormData } from "react-pdf-form-preview";
 
 /**
  * Splits a long string into two lines that fit a PDF text field.
@@ -38,7 +38,7 @@ function splitToLines(
 
 const transformer: DataTransformer = (data, options) => {
   const { font, fontSize = 8, fieldWidthPt = 400 } = options ?? {};
-  const result: FormData = { ...data };
+  const result: PdfFormData = { ...data };
 
   // Split buyer address into two PDF lines
   const address = String(data.buyer_address ?? "");

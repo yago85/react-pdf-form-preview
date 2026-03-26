@@ -2,7 +2,7 @@
  * Example 1 — Basic usage
  *
  * Display a filled PDF form from a URL template.
- * Fields are auto-highlighted: yellow = filled, grey = empty, blue = active.
+ * Fields are auto-highlighted: yellow = filled, grey = empty.
  */
 
 "use client"; // Next.js: client component required
