@@ -27,12 +27,12 @@ const EXAMPLES: { id: ExampleId; label: string; description: string }[] = [
     id: "basic",
     label: "1 · Basic",
     description:
-      "Fill form fields on the left and see the PDF update in real time on the right.",
+      "Fill form fields on the left and see the PDF update in real time on the right. All AcroForm fields are highlighted (yellow = filled, grey = empty).",
   },
   {
     id: "active-field",
     label: "2 · Active field",
-    description: "The focused input highlights the matching PDF field in blue.",
+    description: "Click on an input — the matching PDF field lights up blue. This connects your form to the PDF preview visually.",
   },
   {
     id: "highlight",
@@ -457,6 +457,7 @@ export default function App() {
   }
 
   const isInlineEditMode = activeExample === "inline-edit";
+  const supportsActiveField = activeExample !== "basic" && activeExample !== "highlight";
   const currentExample = EXAMPLES.find((e) => e.id === activeExample)!;
 
   // ── Shared PDF preview ──────────────────────────────────────────────────
@@ -464,7 +465,7 @@ export default function App() {
   const pdfPreview = (
     <div ref={previewRef}>
       <AcroFormPreview
-        activeField={activeField}
+        activeField={supportsActiveField ? activeField : undefined}
         data={formData}
         dataTransformer={serviceTransformer}
         debounceMs={150}
@@ -636,7 +637,7 @@ export default function App() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {FORM_FIELDS.map(({ name, label }) => {
-              const isActive = activeField === name;
+              const isActive = supportsActiveField && activeField === name;
 
               return (
                 <div key={name}>
@@ -645,9 +646,9 @@ export default function App() {
                     placeholder={label}
                     style={{ ...s.input, ...(isActive ? s.inputActive : {}) }}
                     value={formData[name] ?? ""}
-                    onBlur={() => setActiveField(undefined)}
+                    onBlur={supportsActiveField ? () => setActiveField(undefined) : undefined}
                     onChange={(e) => handleChange(name, e.target.value)}
-                    onFocus={() => setActiveField(name)}
+                    onFocus={supportsActiveField ? () => setActiveField(name) : undefined}
                   />
                 </div>
               );
