@@ -1,0 +1,92 @@
+{
+  "name": "react-pdf-form-preview",
+  "version": "1.0.0",
+  "description": "React component to fill PDF form fields and live-preview the result. Load a PDF template with AcroForm fields, pass data, and see changes instantly on canvas. Supports text fields, checkboxes, dropdowns, field highlighting, custom fonts, inline editing, Next.js, and PDF download.",
+  "keywords": [
+    "react",
+    "pdf",
+    "pdf-form",
+    "pdf-fill",
+    "fill-pdf",
+    "pdf-template",
+    "pdf-preview",
+    "pdf-viewer",
+    "pdf-editor",
+    "pdf-render",
+    "acroform",
+    "fillable-pdf",
+    "react-pdf",
+    "react-component",
+    "pdf-lib",
+    "pdfjs",
+    "pdfjs-dist",
+    "pdf-canvas",
+    "live-preview",
+    "document-generator",
+    "pdf-document",
+    "contract-pdf",
+    "invoice-pdf",
+    "form-fill",
+    "typescript",
+    "nextjs"
+  ],
+  "author": "Aleksey Kartsev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yago85/react-pdf-form-preview.git"
+  },
+  "homepage": "https://yago85.github.io/react-pdf-form-preview",
+  "bugs": {
+    "url": "https://github.com/yago85/react-pdf-form-preview/issues"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --external react --external react-dom --external pdf-lib --external pdfjs-dist --external @pdf-lib/fontkit",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react --external react-dom --external pdf-lib --external pdfjs-dist --external @pdf-lib/fontkit",
+    "prepare": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "demo": "cd demo && npm run dev",
+    "demo:build": "cd demo && npm run build"
+  },
+  "peerDependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.0.0 || ^5.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "happy-dom": "^20.8.8",
+    "jsdom": "^29.0.1",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^5.5.207",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.2"
+  }
+}
