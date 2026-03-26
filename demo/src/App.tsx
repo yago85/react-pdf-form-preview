@@ -5,7 +5,7 @@ import AcroFormPreview, {
   distributeTextToLines,
 } from "react-pdf-form-preview";
 
-import { createSamplePdf } from "./createSamplePdf";
+import { createSamplePdf, createMultiPageSamplePdf } from "./createSamplePdf";
 
 // Resolve the bundled worker URL — Vite replaces import.meta.url at build time
 const WORKER_SRC = new URL(
@@ -20,7 +20,8 @@ type ExampleId =
   | "active-field"
   | "highlight"
   | "download"
-  | "inline-edit";
+  | "inline-edit"
+  | "multi-page";
 
 const EXAMPLES: { id: ExampleId; label: string; description: string }[] = [
   {
@@ -50,6 +51,12 @@ const EXAMPLES: { id: ExampleId; label: string; description: string }[] = [
     label: "5 · Inline editing",
     description:
       "Double-click any highlighted field directly in the PDF to edit it in place. No external form needed.",
+  },
+  {
+    id: "multi-page",
+    label: "6 · Multi-page",
+    description:
+      "A 3-page contract with fields on every page. Use page buttons to navigate, or toggle 'Show all pages' to view every page at once. Demonstrates the visiblePages prop.",
   },
 ];
 
@@ -335,6 +342,38 @@ function InlineEditor({
   );
 }
 
+// ── Multi-page field definitions & defaults ─────────────────────────────────
+
+const MP_FORM_FIELDS = [
+  { name: "contract_no", label: "Contract No.", page: 1 },
+  { name: "contract_date", label: "Date", page: 1 },
+  { name: "party_a", label: "Party A (Provider)", page: 1 },
+  { name: "party_b", label: "Party B (Client)", page: 1 },
+  { name: "subject", label: "Subject", page: 1 },
+  { name: "payment_amount", label: "Amount", page: 2 },
+  { name: "payment_method", label: "Payment method", page: 2 },
+  { name: "deadline", label: "Deadline", page: 2 },
+  { name: "penalty", label: "Penalty (%)", page: 2 },
+  { name: "sign_a", label: "Party A signature", page: 3 },
+  { name: "sign_b", label: "Party B signature", page: 3 },
+  { name: "sign_date", label: "Sign date", page: 3 },
+];
+
+const MP_DEFAULT_DATA: Record<string, string> = {
+  contract_no: "CTR-2025-042",
+  contract_date: "15.03.2025",
+  party_a: "Global Tech Solutions LLC",
+  party_b: "Acme Corporation",
+  subject: "Full-stack web application development",
+  payment_amount: "$ 25,000",
+  payment_method: "Bank transfer",
+  deadline: "01.09.2025",
+  penalty: "0.5",
+  sign_a: "Alex Johnson",
+  sign_b: "Jane Doe",
+  sign_date: "15.03.2025",
+};
+
 // ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -349,6 +388,11 @@ export default function App() {
   const [inlineEditor, setInlineEditor] = useState<InlineEditorState | null>(
     null,
   );
+  // Multi-page state
+  const [multiPageBuffer, setMultiPageBuffer] = useState<ArrayBuffer | undefined>();
+  const [multiPageData, setMultiPageData] = useState<Record<string, string>>(MP_DEFAULT_DATA);
+  const [visiblePage, setVisiblePage] = useState<number | null>(null); // null = show all
+  const [mpActiveField, setMpActiveField] = useState<string | undefined>();
   const filledBytesRef = useRef<Uint8Array | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const fieldRectsRef = useRef<Map<string, { page: number; rect: number[] }>>(
@@ -360,6 +404,7 @@ export default function App() {
 
   useEffect(() => {
     createSamplePdf().then(setTemplateBuffer);
+    createMultiPageSamplePdf().then(setMultiPageBuffer);
   }, []);
 
   const handleChange = (name: string, value: string) =>
@@ -457,7 +502,8 @@ export default function App() {
   }
 
   const isInlineEditMode = activeExample === "inline-edit";
-  const supportsActiveField = activeExample !== "basic" && activeExample !== "highlight";
+  const isMultiPageMode = activeExample === "multi-page";
+  const supportsActiveField = activeExample !== "basic" && activeExample !== "highlight" && !isMultiPageMode;
   const currentExample = EXAMPLES.find((e) => e.id === activeExample)!;
 
   // ── Shared PDF preview ──────────────────────────────────────────────────
@@ -510,6 +556,136 @@ export default function App() {
       />
     </div>
   );
+
+  // ── Multi-page example ──────────────────────────────────────────────────
+  if (isMultiPageMode) {
+    const mpHandleChange = (name: string, value: string) =>
+      setMultiPageData((prev) => ({ ...prev, [name]: value }));
+
+    // Group fields by page
+    const pageGroups = [1, 2, 3].map((p) => ({
+      page: p,
+      label: p === 1 ? "General Info" : p === 2 ? "Terms & Conditions" : "Signatures",
+      fields: MP_FORM_FIELDS.filter((f) => f.page === p),
+    }));
+
+    return (
+      <div style={s.layout}>
+        <Header />
+        <Tabs
+          active={activeExample}
+          onSelect={(id) => {
+            setActiveExample(id);
+            setInlineEditor(null);
+          }}
+        />
+        <main style={s.main}>
+          {/* Left: form grouped by page */}
+          <div style={{
+            ...s.panel,
+            maxHeight: "85vh",
+            overflowY: "auto",
+            position: "sticky" as const,
+            top: 16,
+          }}>
+            <p style={s.desc}>{currentExample.description}</p>
+
+            {/* Page navigation buttons */}
+            <div style={{ marginBottom: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button
+                style={{
+                  ...s.btn,
+                  width: "auto",
+                  padding: "6px 14px",
+                  fontSize: 12,
+                  marginTop: 0,
+                  background: visiblePage === null ? "#1a3a5c" : "#e5e7eb",
+                  color: visiblePage === null ? "#fff" : "#333",
+                }}
+                onClick={() => setVisiblePage(null)}
+              >
+                All pages
+              </button>
+              {[1, 2, 3].map((p) => (
+                <button
+                  key={p}
+                  style={{
+                    ...s.btn,
+                    width: "auto",
+                    padding: "6px 14px",
+                    fontSize: 12,
+                    marginTop: 0,
+                    background: visiblePage === p ? "#1a3a5c" : "#e5e7eb",
+                    color: visiblePage === p ? "#fff" : "#333",
+                  }}
+                  onClick={() => setVisiblePage(p)}
+                >
+                  Page {p}
+                </button>
+              ))}
+            </div>
+
+            {pageGroups.map(({ page, label, fields }) => (
+              <div key={page} style={{ marginBottom: 16 }}>
+                <div style={{
+                  fontSize: 12, fontWeight: 600, color: "#1a3a5c",
+                  marginBottom: 8, paddingBottom: 4,
+                  borderBottom: "1px solid #e5e7eb",
+                }}>
+                  Page {page}: {label}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {fields.map(({ name, label: fLabel }) => {
+                    const isActive = mpActiveField === name;
+                    return (
+                      <div key={name}>
+                        <label style={s.label}>{fLabel}</label>
+                        <input
+                          placeholder={fLabel}
+                          style={{ ...s.input, ...(isActive ? s.inputActive : {}) }}
+                          value={multiPageData[name] ?? ""}
+                          onChange={(e) => mpHandleChange(name, e.target.value)}
+                          onFocus={() => setMpActiveField(name)}
+                          onBlur={() => setMpActiveField(undefined)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right: multi-page PDF preview */}
+          <div style={{
+            ...s.panel,
+            maxHeight: "85vh",
+            overflowY: "auto",
+            position: "sticky" as const,
+            top: 16,
+          }}>
+            {multiPageBuffer ? (
+              <AcroFormPreview
+                activeField={mpActiveField}
+                data={multiPageData}
+                debounceMs={150}
+                fontSrc="/react-pdf-form-preview/fonts/Roboto-Regular.ttf"
+                highlightAllFields
+                scale={1.6}
+                templateBuffer={multiPageBuffer}
+                visiblePages={visiblePage ? [visiblePage] : undefined}
+                workerSrc={WORKER_SRC}
+              />
+            ) : (
+              <div style={{ textAlign: "center", padding: 40, color: "#888" }}>
+                Generating multi-page PDF…
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   // ── Inline-edit example: full-width layout ──────────────────────────────
   if (isInlineEditMode) {
