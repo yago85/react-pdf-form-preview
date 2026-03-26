@@ -35,6 +35,7 @@ There is no single library that lets you **fill a PDF template and show a live p
 - **Download filled PDF** — get the filled PDF as `Uint8Array` to download or send to a server
 - **Custom fonts** — embed any `.ttf` / `.woff2` font (Cyrillic, CJK, Arabic, etc.)
 - **Retina / HiDPI** — sharp rendering on high-DPI screens
+- **Multi-page PDFs** — all pages render automatically; show only specific pages with `visiblePages`
 - **Data transformer** — split long text across multiple fields using real font metrics
 - **Next.js / Vite / CRA** — works in any React 18+ environment
 - **TypeScript** — full type coverage, strict mode
@@ -303,6 +304,7 @@ The user never sees a blank or partially-drawn frame between updates.
 - **Скачивание заполненного PDF** — получите `Uint8Array` для скачивания или отправки на сервер
 - **Произвольные шрифты** — подключите любой `.ttf` / `.woff2` (кириллица, CJK, арабский и др.)
 - **Retina / HiDPI** — чёткий рендеринг на экранах высокой плотности
+- **Многостраничные PDF** — все страницы рендерятся автоматически; показ выбранных страниц через `visiblePages`
 - **Data transformer** — разбивка длинного текста по нескольким полям с учётом метрик шрифта
 - **Next.js / Vite / CRA** — работает в любом React 18+ окружении
 - **TypeScript** — полная типизация, strict mode
