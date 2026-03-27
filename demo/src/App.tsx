@@ -5,7 +5,7 @@ import AcroFormPreview, {
   distributeTextToLines,
 } from "react-pdf-form-preview";
 
-import { createSamplePdf, createMultiPageSamplePdf } from "./createSamplePdf";
+import { createMultiPageSamplePdf, createSamplePdf } from "./createSamplePdf";
 
 // Resolve the bundled worker URL — Vite replaces import.meta.url at build time
 const WORKER_SRC = new URL(
@@ -21,7 +21,8 @@ type ExampleId =
   | "highlight"
   | "download"
   | "inline-edit"
-  | "multi-page";
+  | "multi-page"
+  | "upload";
 
 const EXAMPLES: { id: ExampleId; label: string; description: string }[] = [
   {
@@ -33,7 +34,8 @@ const EXAMPLES: { id: ExampleId; label: string; description: string }[] = [
   {
     id: "active-field",
     label: "2 · Active field",
-    description: "Click on an input — the matching PDF field lights up blue. This connects your form to the PDF preview visually.",
+    description:
+      "Click on an input — the matching PDF field lights up blue. This connects your form to the PDF preview visually.",
   },
   {
     id: "highlight",
@@ -57,6 +59,12 @@ const EXAMPLES: { id: ExampleId; label: string; description: string }[] = [
     label: "6 · Multi-page",
     description:
       "A 3-page contract with fields on every page. Use page buttons to navigate, or toggle 'Show all pages' to view every page at once. Demonstrates the visiblePages prop.",
+  },
+  {
+    id: "upload",
+    label: "7 · Upload your PDF",
+    description:
+      "Upload any fillable PDF from your device — it stays 100% local, nothing is sent to a server. AcroForm fields are detected automatically and become editable inputs.",
   },
 ];
 
@@ -389,11 +397,28 @@ export default function App() {
     null,
   );
   // Multi-page state
-  const [multiPageBuffer, setMultiPageBuffer] = useState<ArrayBuffer | undefined>();
-  const [multiPageData, setMultiPageData] = useState<Record<string, string>>(MP_DEFAULT_DATA);
+  const [multiPageBuffer, setMultiPageBuffer] = useState<
+    ArrayBuffer | undefined
+  >();
+  const [multiPageData, setMultiPageData] =
+    useState<Record<string, string>>(MP_DEFAULT_DATA);
   const [visiblePage, setVisiblePage] = useState<number | null>(null); // null = show all
   const [mpActiveField, setMpActiveField] = useState<string | undefined>();
   const filledBytesRef = useRef<Uint8Array | null>(null);
+  // Upload example state
+  const [uploadedBuffer, setUploadedBuffer] = useState<ArrayBuffer | null>(
+    null,
+  );
+  const [uploadedFields, setUploadedFields] = useState<string[]>([]);
+  const [uploadedData, setUploadedData] = useState<Record<string, string>>({});
+  const [uploadedFileName, setUploadedFileName] = useState<string>("");
+  const [uploadDownloadReady, setUploadDownloadReady] = useState(false);
+  const [uploadActiveField, setUploadActiveField] = useState<
+    string | undefined
+  >();
+  const [uploadIsDragOver, setUploadIsDragOver] = useState(false);
+  const uploadFilledBytesRef = useRef<Uint8Array | null>(null);
+  const uploadInitializedRef = useRef(false);
   const previewRef = useRef<HTMLDivElement>(null);
   const fieldRectsRef = useRef<Map<string, { page: number; rect: number[] }>>(
     new Map(),
@@ -409,6 +434,46 @@ export default function App() {
 
   const handleChange = (name: string, value: string) =>
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+  const loadPdfFile = (file: File) => {
+    setUploadedFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const buffer = ev.target?.result as ArrayBuffer;
+      uploadInitializedRef.current = false;
+      uploadFilledBytesRef.current = null;
+      setUploadedBuffer(buffer);
+      setUploadedFields([]);
+      setUploadedData({});
+      setUploadDownloadReady(false);
+      setUploadActiveField(undefined);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    loadPdfFile(file);
+  };
+
+  const handleUploadDownload = () => {
+    if (!uploadFilledBytesRef.current) return;
+    const blob = new Blob([uploadFilledBytesRef.current as any], {
+      type: "application/pdf",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.href = url;
+    a.download = uploadedFileName || "filled.pdf";
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  };
 
   const handleDownload = () => {
     if (!filledBytesRef.current) return;
@@ -469,6 +534,229 @@ export default function App() {
         ]
       : undefined;
 
+  // ── Upload example (no sample PDF needed) ──────────────────────────────
+  if (activeExample === "upload") {
+    const uploadHandleChange = (name: string, value: string) =>
+      setUploadedData((prev) => ({ ...prev, [name]: value }));
+
+    const uploadExample = EXAMPLES.find((e) => e.id === "upload")!;
+
+    return (
+      <div style={s.layout}>
+        <Header />
+        <Tabs
+          active={activeExample}
+          onSelect={(id) => {
+            setActiveExample(id);
+            setInlineEditor(null);
+            setUploadActiveField(undefined);
+          }}
+        />
+        <main style={s.main}>
+          {/* Left: file upload + dynamic fields */}
+          <div
+            style={{
+              ...s.panel,
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "sticky" as const,
+              top: 16,
+            }}
+          >
+            <p style={s.desc}>{uploadExample.description}</p>
+
+            {/* Drop-zone / file picker */}
+            <label
+              style={{
+                display: "block",
+                border: `2px dashed ${
+                  uploadIsDragOver
+                    ? "#3b82f6"
+                    : uploadedBuffer
+                      ? "#86efac"
+                      : "#d0d7e3"
+                }`,
+                borderRadius: 8,
+                padding: "18px 12px",
+                textAlign: "center" as const,
+                cursor: "pointer",
+                marginBottom: 16,
+                background: uploadIsDragOver
+                  ? "#eff6ff"
+                  : uploadedBuffer
+                    ? "#f0fdf4"
+                    : "#fafbfc",
+                transition: "border-color .15s, background .15s",
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setUploadIsDragOver(true);
+              }}
+              onDragLeave={() => setUploadIsDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setUploadIsDragOver(false);
+                const file = e.dataTransfer.files?.[0];
+                if (!file || file.type !== "application/pdf") return;
+                loadPdfFile(file);
+              }}
+            >
+              <input
+                type="file"
+                accept=".pdf,application/pdf"
+                style={{ display: "none" }}
+                onChange={handleFileUpload}
+              />
+              {uploadedBuffer ? (
+                <>
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>✅</div>
+                  <div
+                    style={{ fontSize: 13, fontWeight: 600, color: "#166534" }}
+                  >
+                    {uploadedFileName}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
+                    {uploadedFields.length} field(s) detected · click to replace
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>
+                    {uploadIsDragOver ? "⬇️" : "📄"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: uploadIsDragOver ? "#1d4ed8" : "#555",
+                    }}
+                  >
+                    {uploadIsDragOver
+                      ? "Drop PDF here"
+                      : "Click or drag a PDF here"}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>
+                    Only AcroForm PDFs will show fillable fields
+                  </div>
+                </>
+              )}
+            </label>
+
+            {/* Dynamic form fields */}
+            {uploadedFields.length > 0 && (
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 10 }}
+              >
+                {uploadedFields.map((name) => {
+                  const isActive = uploadActiveField === name;
+                  return (
+                    <div key={name}>
+                      <label style={s.label}>{name}</label>
+                      <input
+                        placeholder={name}
+                        style={{
+                          ...s.input,
+                          ...(isActive ? s.inputActive : {}),
+                        }}
+                        value={uploadedData[name] ?? ""}
+                        onChange={(e) =>
+                          uploadHandleChange(name, e.target.value)
+                        }
+                        onFocus={() => setUploadActiveField(name)}
+                        onBlur={() => setUploadActiveField(undefined)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {uploadedBuffer && uploadedFields.length === 0 && (
+              <div
+                style={{
+                  ...s.hint,
+                  textAlign: "center" as const,
+                  padding: 16,
+                  background: "#fffbeb",
+                  border: "1px solid #fde68a",
+                  borderRadius: 8,
+                  color: "#92400e",
+                }}
+              >
+                No AcroForm fields detected in this PDF.
+              </div>
+            )}
+
+            {uploadedFields.length > 0 && (
+              <button
+                disabled={!uploadDownloadReady}
+                style={{ ...s.btn, opacity: uploadDownloadReady ? 1 : 0.5 }}
+                onClick={handleUploadDownload}
+              >
+                {uploadDownloadReady ? "⬇ Download filled PDF" : "Rendering…"}
+              </button>
+            )}
+          </div>
+
+          {/* Right: PDF preview */}
+          <div
+            style={{
+              ...s.panel,
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "sticky" as const,
+              top: 16,
+            }}
+          >
+            {uploadedBuffer ? (
+              <AcroFormPreview
+                activeField={uploadActiveField}
+                data={uploadedData}
+                debounceMs={150}
+                fontSrc="/react-pdf-form-preview/fonts/Roboto-Regular.ttf"
+                highlightAllFields
+                scale={1.6}
+                templateBuffer={uploadedBuffer}
+                workerSrc={WORKER_SRC}
+                onFieldRectsReady={(rects) => {
+                  if (!uploadInitializedRef.current) {
+                    uploadInitializedRef.current = true;
+                    const names = Array.from(rects.keys());
+                    setUploadedFields(names);
+                    setUploadedData(
+                      Object.fromEntries(names.map((n) => [n, ""])),
+                    );
+                    setUploadDownloadReady(false);
+                  }
+                }}
+                onPdfGenerated={(bytes) => {
+                  uploadFilledBytesRef.current = bytes;
+                  if (!uploadDownloadReady) setUploadDownloadReady(true);
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 300,
+                  color: "#bbb",
+                }}
+              >
+                <div style={{ fontSize: 48, marginBottom: 12 }}>📋</div>
+                <div style={{ fontSize: 14 }}>
+                  Upload a PDF to preview it here
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (!templateBuffer) {
     return (
       <div
@@ -503,7 +791,10 @@ export default function App() {
 
   const isInlineEditMode = activeExample === "inline-edit";
   const isMultiPageMode = activeExample === "multi-page";
-  const supportsActiveField = activeExample !== "basic" && activeExample !== "highlight" && !isMultiPageMode;
+  const supportsActiveField =
+    activeExample !== "basic" &&
+    activeExample !== "highlight" &&
+    !isMultiPageMode;
   const currentExample = EXAMPLES.find((e) => e.id === activeExample)!;
 
   // ── Shared PDF preview ──────────────────────────────────────────────────
@@ -565,7 +856,12 @@ export default function App() {
     // Group fields by page
     const pageGroups = [1, 2, 3].map((p) => ({
       page: p,
-      label: p === 1 ? "General Info" : p === 2 ? "Terms & Conditions" : "Signatures",
+      label:
+        p === 1
+          ? "General Info"
+          : p === 2
+            ? "Terms & Conditions"
+            : "Signatures",
       fields: MP_FORM_FIELDS.filter((f) => f.page === p),
     }));
 
@@ -581,17 +877,26 @@ export default function App() {
         />
         <main style={s.main}>
           {/* Left: form grouped by page */}
-          <div style={{
-            ...s.panel,
-            maxHeight: "85vh",
-            overflowY: "auto",
-            position: "sticky" as const,
-            top: 16,
-          }}>
+          <div
+            style={{
+              ...s.panel,
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "sticky" as const,
+              top: 16,
+            }}
+          >
             <p style={s.desc}>{currentExample.description}</p>
 
             {/* Page navigation buttons */}
-            <div style={{ marginBottom: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div
+              style={{
+                marginBottom: 16,
+                display: "flex",
+                gap: 8,
+                flexWrap: "wrap",
+              }}
+            >
               <button
                 style={{
                   ...s.btn,
@@ -627,14 +932,21 @@ export default function App() {
 
             {pageGroups.map(({ page, label, fields }) => (
               <div key={page} style={{ marginBottom: 16 }}>
-                <div style={{
-                  fontSize: 12, fontWeight: 600, color: "#1a3a5c",
-                  marginBottom: 8, paddingBottom: 4,
-                  borderBottom: "1px solid #e5e7eb",
-                }}>
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#1a3a5c",
+                    marginBottom: 8,
+                    paddingBottom: 4,
+                    borderBottom: "1px solid #e5e7eb",
+                  }}
+                >
                   Page {page}: {label}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                >
                   {fields.map(({ name, label: fLabel }) => {
                     const isActive = mpActiveField === name;
                     return (
@@ -642,7 +954,10 @@ export default function App() {
                         <label style={s.label}>{fLabel}</label>
                         <input
                           placeholder={fLabel}
-                          style={{ ...s.input, ...(isActive ? s.inputActive : {}) }}
+                          style={{
+                            ...s.input,
+                            ...(isActive ? s.inputActive : {}),
+                          }}
                           value={multiPageData[name] ?? ""}
                           onChange={(e) => mpHandleChange(name, e.target.value)}
                           onFocus={() => setMpActiveField(name)}
@@ -657,13 +972,15 @@ export default function App() {
           </div>
 
           {/* Right: multi-page PDF preview */}
-          <div style={{
-            ...s.panel,
-            maxHeight: "85vh",
-            overflowY: "auto",
-            position: "sticky" as const,
-            top: 16,
-          }}>
+          <div
+            style={{
+              ...s.panel,
+              maxHeight: "85vh",
+              overflowY: "auto",
+              position: "sticky" as const,
+              top: 16,
+            }}
+          >
             {multiPageBuffer ? (
               <AcroFormPreview
                 activeField={mpActiveField}
@@ -822,9 +1139,17 @@ export default function App() {
                     placeholder={label}
                     style={{ ...s.input, ...(isActive ? s.inputActive : {}) }}
                     value={formData[name] ?? ""}
-                    onBlur={supportsActiveField ? () => setActiveField(undefined) : undefined}
+                    onBlur={
+                      supportsActiveField
+                        ? () => setActiveField(undefined)
+                        : undefined
+                    }
                     onChange={(e) => handleChange(name, e.target.value)}
-                    onFocus={supportsActiveField ? () => setActiveField(name) : undefined}
+                    onFocus={
+                      supportsActiveField
+                        ? () => setActiveField(name)
+                        : undefined
+                    }
                   />
                 </div>
               );

@@ -18,12 +18,12 @@ Load a PDF with AcroForm fields, pass your form data, and the component renders 
 
 There is no single library that lets you **fill a PDF template and show a live preview** in React. Existing tools solve only part of the problem:
 
-| Library | Fills fields | Live preview | React component |
-|---------|:---:|:---:|:---:|
-| pdf-lib | yes | — | — |
-| react-pdf | — | yes | yes |
-| pdfjs-dist | — | yes | — |
-| **react-pdf-form-preview** | **yes** | **yes** | **yes** |
+| Library                    | Fills fields | Live preview | React component |
+| -------------------------- | :----------: | :----------: | :-------------: |
+| pdf-lib                    |     yes      |      —       |        —        |
+| react-pdf                  |      —       |     yes      |       yes       |
+| pdfjs-dist                 |      —       |     yes      |        —        |
+| **react-pdf-form-preview** |   **yes**    |   **yes**    |     **yes**     |
 
 ### Key features
 
@@ -106,33 +106,33 @@ export default function MyPage() {
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `templateUrl` | `string` | — | URL to fetch the PDF template |
-| `templateBuffer` | `ArrayBuffer` | — | Direct buffer — avoids a repeated fetch |
-| `data` | `Record<string, string \| number \| boolean \| null>` | **required** | Field values |
-| `dataTransformer` | `DataTransformer` | — | Transform `data` before filling (multiline split, number-to-words, etc.) |
-| `fieldMapping` | `Record<string, string>` | — | Simple 1-to-1 map: `formFieldName → pdfFieldName` |
-| `workerSrc` | `string` | — | Path to `pdf.worker.min.mjs` (if omitted, configure `pdfjsLib.GlobalWorkerOptions.workerSrc` yourself) |
-| `fontSrc` | `string` | Roboto (Google Fonts CDN) | URL/path to a `.ttf` or `.woff2` font |
-| `fontSize` | `number` | `8` | Font size in pt for text fields |
-| `scale` | `number` | `1.5` | Canvas render scale |
-| `maxWidth` | `string` | `"810px"` | CSS `max-width` of the container |
-| `debounceMs` | `number` | `200` | Debounce before re-render when data changes |
-| `highlightAllFields` | `boolean` | `false` | Auto-highlight all AcroForm fields |
-| `activeField` | `string` | — | Field name highlighted in blue (focused) |
-| `hiddenFields` | `Set<string>` | — | Fields excluded from auto-highlighting |
-| `highlightFields` | `FieldHighlight[]` | — | Manual highlight list `{ fieldName, color }` |
-| `showLabels` | `boolean` | — | Show field names inside highlight boxes |
-| `visiblePages` | `number[]` | all | Render only these pages (1-based) |
-| `onFieldClick` | `(fieldName: string) => void` | — | Click on a highlighted field |
-| `onFieldDoubleClick` | `(fieldName, rect) => void` | — | Double-click on a field |
-| `onFieldRectsReady` | `(rects: Map<...>) => void` | — | Field coordinates after first render |
-| `onPageSizesReady` | `(sizes: Map<...>) => void` | — | Page sizes in PDF points after first render |
-| `onPdfGenerated` | `(bytes: Uint8Array) => void` | — | Filled PDF bytes after every render |
-| `renderPageOverlay` | `(pageNum: number) => ReactNode` | — | Custom overlay slot per page |
-| `fieldsRequiringRecalculation` | `string[]` | — | Fields that trigger multiline width recalculation |
-| `className` | `string` | `""` | Extra class on the root element |
+| Prop                           | Type                                                  | Default                   | Description                                                                                            |
+| ------------------------------ | ----------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `templateUrl`                  | `string`                                              | —                         | URL to fetch the PDF template                                                                          |
+| `templateBuffer`               | `ArrayBuffer`                                         | —                         | Direct buffer — avoids a repeated fetch                                                                |
+| `data`                         | `Record<string, string \| number \| boolean \| null>` | **required**              | Field values                                                                                           |
+| `dataTransformer`              | `DataTransformer`                                     | —                         | Transform `data` before filling (multiline split, number-to-words, etc.)                               |
+| `fieldMapping`                 | `Record<string, string>`                              | —                         | Simple 1-to-1 map: `formFieldName → pdfFieldName`                                                      |
+| `workerSrc`                    | `string`                                              | —                         | Path to `pdf.worker.min.mjs` (if omitted, configure `pdfjsLib.GlobalWorkerOptions.workerSrc` yourself) |
+| `fontSrc`                      | `string`                                              | Roboto (Google Fonts CDN) | URL/path to a `.ttf` or `.woff2` font                                                                  |
+| `fontSize`                     | `number`                                              | `8`                       | Font size in pt for text fields                                                                        |
+| `scale`                        | `number`                                              | `1.5`                     | Canvas render scale                                                                                    |
+| `maxWidth`                     | `string`                                              | `"810px"`                 | CSS `max-width` of the container                                                                       |
+| `debounceMs`                   | `number`                                              | `200`                     | Debounce before re-render when data changes                                                            |
+| `highlightAllFields`           | `boolean`                                             | `false`                   | Auto-highlight all AcroForm fields                                                                     |
+| `activeField`                  | `string`                                              | —                         | Field name highlighted in blue (focused)                                                               |
+| `hiddenFields`                 | `Set<string>`                                         | —                         | Fields excluded from auto-highlighting                                                                 |
+| `highlightFields`              | `FieldHighlight[]`                                    | —                         | Manual highlight list `{ fieldName, color }`                                                           |
+| `showLabels`                   | `boolean`                                             | —                         | Show field names inside highlight boxes                                                                |
+| `visiblePages`                 | `number[]`                                            | all                       | Render only these pages (1-based)                                                                      |
+| `onFieldClick`                 | `(fieldName: string) => void`                         | —                         | Click on a highlighted field                                                                           |
+| `onFieldDoubleClick`           | `(fieldName, rect) => void`                           | —                         | Double-click on a field                                                                                |
+| `onFieldRectsReady`            | `(rects: Map<...>) => void`                           | —                         | Field coordinates after first render                                                                   |
+| `onPageSizesReady`             | `(sizes: Map<...>) => void`                           | —                         | Page sizes in PDF points after first render                                                            |
+| `onPdfGenerated`               | `(bytes: Uint8Array) => void`                         | —                         | Filled PDF bytes after every render                                                                    |
+| `renderPageOverlay`            | `(pageNum: number) => ReactNode`                      | —                         | Custom overlay slot per page                                                                           |
+| `fieldsRequiringRecalculation` | `string[]`                                            | —                         | Fields that trigger multiline width recalculation                                                      |
+| `className`                    | `string`                                              | `""`                      | Extra class on the root element                                                                        |
 
 ### Examples
 
@@ -180,7 +180,7 @@ const transformer: DataTransformer = (data, options) => {
   data={formData}
   dataTransformer={transformer}
   fieldsRequiringRecalculation={["full_address"]}
-/>
+/>;
 ```
 
 #### Example 4 — Download filled PDF
@@ -192,8 +192,10 @@ const filledBytesRef = useRef<Uint8Array | null>(null);
   templateBuffer={templateBuffer}
   workerSrc="/pdf.worker.min.mjs"
   data={formData}
-  onPdfGenerated={(bytes) => { filledBytesRef.current = bytes; }}
-/>
+  onPdfGenerated={(bytes) => {
+    filledBytesRef.current = bytes;
+  }}
+/>;
 
 // later:
 const blob = new Blob([filledBytesRef.current!], { type: "application/pdf" });
@@ -211,17 +213,37 @@ interface InlineEditorState {
 
 function InlineEditor({ state, value, onChange, onClose }) {
   const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => { setTimeout(() => ref.current?.focus(), 30); }, []);
+  useEffect(() => {
+    setTimeout(() => ref.current?.focus(), 30);
+  }, []);
 
   return (
-    <div style={{ position: "absolute", left: `${state.rect.left}%`, top: `${state.rect.top}%`, width: `${state.rect.width}%`, height: `${state.rect.height}%`, zIndex: 10 }}>
+    <div
+      style={{
+        position: "absolute",
+        left: `${state.rect.left}%`,
+        top: `${state.rect.top}%`,
+        width: `${state.rect.width}%`,
+        height: `${state.rect.height}%`,
+        zIndex: 10,
+      }}
+    >
       <input
         ref={ref}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onBlur={onClose}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") onClose(); }}
-        style={{ width: "100%", height: "100%", border: "2px solid #3b82f6", outline: "none", fontSize: 11, boxSizing: "border-box" }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === "Escape") onClose();
+        }}
+        style={{
+          width: "100%",
+          height: "100%",
+          border: "2px solid #3b82f6",
+          outline: "none",
+          fontSize: 11,
+          boxSizing: "border-box",
+        }}
       />
     </div>
   );
@@ -249,8 +271,13 @@ export default function InlineEditingExample() {
         <InlineEditor
           state={editor}
           value={(formData as any)[editor.fieldName] ?? ""}
-          onChange={(v) => setFormData((prev) => ({ ...prev, [editor.fieldName]: v }))}
-          onClose={() => { setEditor(null); setActiveField(undefined); }}
+          onChange={(v) =>
+            setFormData((prev) => ({ ...prev, [editor.fieldName]: v }))
+          }
+          onClose={() => {
+            setEditor(null);
+            setActiveField(undefined);
+          }}
         />
       )}
     </div>
@@ -258,7 +285,117 @@ export default function InlineEditingExample() {
 }
 ```
 
-> See the **[Live Demo](https://yago85.github.io/react-pdf-form-preview)** for an interactive version of all 5 examples.
+#### Example 6 — Multi-page PDF
+
+Render a multi-page PDF and navigate between pages with the `visiblePages` prop.
+
+```tsx
+const [visiblePage, setVisiblePage] = useState<number | null>(null);
+
+<AcroFormPreview
+  templateUrl="/templates/multi-page-contract.pdf"
+  workerSrc="/pdf.worker.min.mjs"
+  data={formData}
+  visiblePages={visiblePage ? [visiblePage] : undefined}
+  highlightAllFields
+/>
+
+// page navigation buttons:
+<button onClick={() => setVisiblePage(null)}>All pages</button>
+<button onClick={() => setVisiblePage(1)}>Page 1</button>
+<button onClick={() => setVisiblePage(2)}>Page 2</button>
+```
+
+#### Example 7 — Upload a local PDF and fill it
+
+Let users pick any fillable PDF from their device. The file is read via `FileReader` — nothing is sent to a server. Field names are discovered automatically at runtime through `onFieldRectsReady`.
+
+```tsx
+export default function UploadLocalPdfExample() {
+  const [templateBuffer, setTemplateBuffer] = useState<ArrayBuffer | null>(
+    null,
+  );
+  const [fields, setFields] = useState<string[]>([]);
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [activeField, setActiveField] = useState<string | undefined>();
+  const filledBytesRef = useRef<Uint8Array | null>(null);
+  const initializedRef = useRef(false);
+
+  const loadFile = (file: File) => {
+    if (file.type !== "application/pdf") return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      initializedRef.current = false;
+      filledBytesRef.current = null;
+      setTemplateBuffer(e.target?.result as ArrayBuffer);
+      setFields([]);
+      setFormData({});
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  return (
+    <div style={{ display: "flex", gap: 24 }}>
+      {/* Drop-zone */}
+      <label
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const f = e.dataTransfer.files?.[0];
+          if (f) loadFile(f);
+        }}
+      >
+        <input
+          type="file"
+          accept=".pdf,application/pdf"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) loadFile(f);
+          }}
+        />
+        Click or drag a PDF here
+      </label>
+
+      {/* Auto-generated inputs */}
+      {fields.map((name) => (
+        <input
+          key={name}
+          placeholder={name}
+          value={formData[name] ?? ""}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, [name]: e.target.value }))
+          }
+          onFocus={() => setActiveField(name)}
+          onBlur={() => setActiveField(undefined)}
+        />
+      ))}
+
+      {/* Live preview */}
+      {templateBuffer && (
+        <AcroFormPreview
+          templateBuffer={templateBuffer}
+          workerSrc="/pdf.worker.min.mjs"
+          data={formData}
+          activeField={activeField}
+          highlightAllFields
+          onFieldRectsReady={(rects) => {
+            if (initializedRef.current) return;
+            initializedRef.current = true;
+            const names = Array.from(rects.keys());
+            setFields(names);
+            setFormData(Object.fromEntries(names.map((n) => [n, ""])));
+          }}
+          onPdfGenerated={(bytes) => {
+            filledBytesRef.current = bytes;
+          }}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+> See the **[Live Demo](https://yago85.github.io/react-pdf-form-preview)** for an interactive version of all 7 examples.
 
 ### How double-buffering works
 
@@ -287,12 +424,12 @@ The user never sees a blank or partially-drawn frame between updates.
 
 Не существует единой библиотеки, которая позволяет **заполнить PDF-шаблон и показать живой предпросмотр** в React. Существующие решения закрывают лишь часть задачи:
 
-| Библиотека | Заполняет поля | Live-превью | React-компонент |
-|------------|:---:|:---:|:---:|
-| pdf-lib | да | — | — |
-| react-pdf | — | да | да |
-| pdfjs-dist | — | да | — |
-| **react-pdf-form-preview** | **да** | **да** | **да** |
+| Библиотека                 | Заполняет поля | Live-превью | React-компонент |
+| -------------------------- | :------------: | :---------: | :-------------: |
+| pdf-lib                    |       да       |      —      |        —        |
+| react-pdf                  |       —        |     да      |       да        |
+| pdfjs-dist                 |       —        |     да      |        —        |
+| **react-pdf-form-preview** |     **да**     |   **да**    |     **да**      |
 
 ### Ключевые возможности
 
@@ -375,33 +512,33 @@ export default function MyPage() {
 
 ### Пропсы
 
-| Проп | Тип | По умолчанию | Описание |
-|------|-----|--------------|----------|
-| `templateUrl` | `string` | — | URL для загрузки PDF-шаблона |
-| `templateBuffer` | `ArrayBuffer` | — | Буфер шаблона напрямую — без повторного fetch |
-| `data` | `Record<string, string \| number \| boolean \| null>` | **обязательный** | Значения полей |
-| `dataTransformer` | `DataTransformer` | — | Трансформация данных перед заполнением |
-| `fieldMapping` | `Record<string, string>` | — | Маппинг 1-к-1: `поле_формы → поле_pdf` |
-| `workerSrc` | `string` | — | Путь к `pdf.worker.min.mjs` (если не задан — настройте `pdfjsLib.GlobalWorkerOptions.workerSrc` самостоятельно) |
-| `fontSrc` | `string` | Roboto с CDN | Путь к шрифту `.ttf` / `.woff2` |
-| `fontSize` | `number` | `8` | Размер шрифта в pt |
-| `scale` | `number` | `1.5` | Масштаб рендеринга canvas |
-| `maxWidth` | `string` | `"810px"` | CSS `max-width` контейнера |
-| `debounceMs` | `number` | `200` | Задержка перед повторным рендером |
-| `highlightAllFields` | `boolean` | `false` | Автоподсветка всех AcroForm-полей |
-| `activeField` | `string` | — | Активное поле (синяя подсветка) |
-| `hiddenFields` | `Set<string>` | — | Поля, исключённые из подсветки |
-| `highlightFields` | `FieldHighlight[]` | — | Ручная подсветка `{ fieldName, color }` |
-| `showLabels` | `boolean` | — | Показывать имена полей в overlay |
-| `visiblePages` | `number[]` | все | Показывать только эти страницы (с 1) |
-| `onFieldClick` | `(fieldName: string) => void` | — | Клик по полю в overlay |
-| `onFieldDoubleClick` | `(fieldName, rect) => void` | — | Двойной клик по полю |
-| `onFieldRectsReady` | `(rects: Map<...>) => void` | — | Координаты полей после первого рендера |
-| `onPageSizesReady` | `(sizes: Map<...>) => void` | — | Размеры страниц в PDF-точках после первого рендера |
-| `onPdfGenerated` | `(bytes: Uint8Array) => void` | — | Заполненный PDF после каждого рендера |
-| `renderPageOverlay` | `(pageNum: number) => ReactNode` | — | Произвольный overlay на каждую страницу |
-| `fieldsRequiringRecalculation` | `string[]` | — | Поля, при изменении которых пересчитывается ширина |
-| `className` | `string` | `""` | Дополнительный класс на корневой элемент |
+| Проп                           | Тип                                                   | По умолчанию     | Описание                                                                                                        |
+| ------------------------------ | ----------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| `templateUrl`                  | `string`                                              | —                | URL для загрузки PDF-шаблона                                                                                    |
+| `templateBuffer`               | `ArrayBuffer`                                         | —                | Буфер шаблона напрямую — без повторного fetch                                                                   |
+| `data`                         | `Record<string, string \| number \| boolean \| null>` | **обязательный** | Значения полей                                                                                                  |
+| `dataTransformer`              | `DataTransformer`                                     | —                | Трансформация данных перед заполнением                                                                          |
+| `fieldMapping`                 | `Record<string, string>`                              | —                | Маппинг 1-к-1: `поле_формы → поле_pdf`                                                                          |
+| `workerSrc`                    | `string`                                              | —                | Путь к `pdf.worker.min.mjs` (если не задан — настройте `pdfjsLib.GlobalWorkerOptions.workerSrc` самостоятельно) |
+| `fontSrc`                      | `string`                                              | Roboto с CDN     | Путь к шрифту `.ttf` / `.woff2`                                                                                 |
+| `fontSize`                     | `number`                                              | `8`              | Размер шрифта в pt                                                                                              |
+| `scale`                        | `number`                                              | `1.5`            | Масштаб рендеринга canvas                                                                                       |
+| `maxWidth`                     | `string`                                              | `"810px"`        | CSS `max-width` контейнера                                                                                      |
+| `debounceMs`                   | `number`                                              | `200`            | Задержка перед повторным рендером                                                                               |
+| `highlightAllFields`           | `boolean`                                             | `false`          | Автоподсветка всех AcroForm-полей                                                                               |
+| `activeField`                  | `string`                                              | —                | Активное поле (синяя подсветка)                                                                                 |
+| `hiddenFields`                 | `Set<string>`                                         | —                | Поля, исключённые из подсветки                                                                                  |
+| `highlightFields`              | `FieldHighlight[]`                                    | —                | Ручная подсветка `{ fieldName, color }`                                                                         |
+| `showLabels`                   | `boolean`                                             | —                | Показывать имена полей в overlay                                                                                |
+| `visiblePages`                 | `number[]`                                            | все              | Показывать только эти страницы (с 1)                                                                            |
+| `onFieldClick`                 | `(fieldName: string) => void`                         | —                | Клик по полю в overlay                                                                                          |
+| `onFieldDoubleClick`           | `(fieldName, rect) => void`                           | —                | Двойной клик по полю                                                                                            |
+| `onFieldRectsReady`            | `(rects: Map<...>) => void`                           | —                | Координаты полей после первого рендера                                                                          |
+| `onPageSizesReady`             | `(sizes: Map<...>) => void`                           | —                | Размеры страниц в PDF-точках после первого рендера                                                              |
+| `onPdfGenerated`               | `(bytes: Uint8Array) => void`                         | —                | Заполненный PDF после каждого рендера                                                                           |
+| `renderPageOverlay`            | `(pageNum: number) => ReactNode`                      | —                | Произвольный overlay на каждую страницу                                                                         |
+| `fieldsRequiringRecalculation` | `string[]`                                            | —                | Поля, при изменении которых пересчитывается ширина                                                              |
+| `className`                    | `string`                                              | `""`             | Дополнительный класс на корневой элемент                                                                        |
 
 ### Примеры
 
@@ -449,7 +586,7 @@ const transformer: DataTransformer = (data, options) => {
   data={formData}
   dataTransformer={transformer}
   fieldsRequiringRecalculation={["address"]}
-/>
+/>;
 ```
 
 #### Пример 4 — Скачать заполненный PDF
@@ -461,8 +598,10 @@ const filledBytesRef = useRef<Uint8Array | null>(null);
   templateBuffer={templateBuffer}
   workerSrc="/pdf.worker.min.mjs"
   data={formData}
-  onPdfGenerated={(bytes) => { filledBytesRef.current = bytes; }}
-/>
+  onPdfGenerated={(bytes) => {
+    filledBytesRef.current = bytes;
+  }}
+/>;
 
 // при нажатии на кнопку:
 const blob = new Blob([filledBytesRef.current!], { type: "application/pdf" });
@@ -495,8 +634,13 @@ export default function InlineEditingExample() {
         <InlineEditor
           state={editor}
           value={formData[editor.fieldName] ?? ""}
-          onChange={(v) => setFormData((prev) => ({ ...prev, [editor.fieldName]: v }))}
-          onClose={() => { setEditor(null); setActiveField(undefined); }}
+          onChange={(v) =>
+            setFormData((prev) => ({ ...prev, [editor.fieldName]: v }))
+          }
+          onClose={() => {
+            setEditor(null);
+            setActiveField(undefined);
+          }}
         />
       )}
     </div>
@@ -504,7 +648,117 @@ export default function InlineEditingExample() {
 }
 ```
 
-> Смотри **[Live Demo](https://yago85.github.io/react-pdf-form-preview)** — интерактивные версии всех 5 примеров.
+#### Пример 6 — Многостраничный PDF
+
+Отрисовка многостраничного PDF с навигацией по страницам через проп `visiblePages`.
+
+```tsx
+const [visiblePage, setVisiblePage] = useState<number | null>(null);
+
+<AcroFormPreview
+  templateUrl="/templates/multi-page-contract.pdf"
+  workerSrc="/pdf.worker.min.mjs"
+  data={formData}
+  visiblePages={visiblePage ? [visiblePage] : undefined}
+  highlightAllFields
+/>
+
+// кнопки навигации:
+<button onClick={() => setVisiblePage(null)}>Все страницы</button>
+<button onClick={() => setVisiblePage(1)}>Страница 1</button>
+<button onClick={() => setVisiblePage(2)}>Страница 2</button>
+```
+
+#### Пример 7 — Загрузка локального PDF и его заполнение
+
+Позвольте пользователю загрузить любой заполняемый PDF прямо с устройства. Файл читается через `FileReader` — ничего не отправляется на сервер. Имена полей обнаруживаются автоматически через `onFieldRectsReady`.
+
+```tsx
+export default function UploadLocalPdfExample() {
+  const [templateBuffer, setTemplateBuffer] = useState<ArrayBuffer | null>(
+    null,
+  );
+  const [fields, setFields] = useState<string[]>([]);
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [activeField, setActiveField] = useState<string | undefined>();
+  const filledBytesRef = useRef<Uint8Array | null>(null);
+  const initializedRef = useRef(false);
+
+  const loadFile = (file: File) => {
+    if (file.type !== "application/pdf") return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      initializedRef.current = false;
+      filledBytesRef.current = null;
+      setTemplateBuffer(e.target?.result as ArrayBuffer);
+      setFields([]);
+      setFormData({});
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  return (
+    <div style={{ display: "flex", gap: 24 }}>
+      {/* Зона загрузки */}
+      <label
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          const f = e.dataTransfer.files?.[0];
+          if (f) loadFile(f);
+        }}
+      >
+        <input
+          type="file"
+          accept=".pdf,application/pdf"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) loadFile(f);
+          }}
+        />
+        Нажмите или перетащите PDF сюда
+      </label>
+
+      {/* Автогенерируемые поля */}
+      {fields.map((name) => (
+        <input
+          key={name}
+          placeholder={name}
+          value={formData[name] ?? ""}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, [name]: e.target.value }))
+          }
+          onFocus={() => setActiveField(name)}
+          onBlur={() => setActiveField(undefined)}
+        />
+      ))}
+
+      {/* Живой предпросмотр */}
+      {templateBuffer && (
+        <AcroFormPreview
+          templateBuffer={templateBuffer}
+          workerSrc="/pdf.worker.min.mjs"
+          data={formData}
+          activeField={activeField}
+          highlightAllFields
+          onFieldRectsReady={(rects) => {
+            if (initializedRef.current) return;
+            initializedRef.current = true;
+            const names = Array.from(rects.keys());
+            setFields(names);
+            setFormData(Object.fromEntries(names.map((n) => [n, ""])));
+          }}
+          onPdfGenerated={(bytes) => {
+            filledBytesRef.current = bytes;
+          }}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+> Смотри **[Live Demo](https://yago85.github.io/react-pdf-form-preview)** — интерактивные версии всех 7 примеров.
 
 ### Как работает двойная буферизация
 
