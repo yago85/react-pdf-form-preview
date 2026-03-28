@@ -5,6 +5,21 @@ import AcroFormPreview, {
   distributeTextToLines,
 } from "react-pdf-form-preview";
 
+function useIsMobile(breakpoint = 768) {
+  const [mobile, setMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < breakpoint : false,
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const handler = (e: MediaQueryListEvent | MediaQueryList) =>
+      setMobile(e.matches);
+    handler(mql);
+    mql.addEventListener("change", handler as any);
+    return () => mql.removeEventListener("change", handler as any);
+  }, [breakpoint]);
+  return mobile;
+}
+
 import { createMultiPageSamplePdf, createSamplePdf } from "./createSamplePdf";
 
 // Resolve the bundled worker URL — Vite replaces import.meta.url at build time
@@ -76,16 +91,16 @@ const s = {
     background: "#f0f2f5",
     fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
   } as React.CSSProperties,
-  header: {
+  header: (mobile = false): React.CSSProperties => ({
     background: "#1a3a5c",
     color: "#fff",
-    padding: "20px 40px",
+    padding: mobile ? "16px 16px" : "20px 40px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     flexWrap: "wrap" as const,
     gap: 12,
-  } as React.CSSProperties,
+  }),
   h1: {
     margin: 0,
     fontSize: 22,
@@ -102,13 +117,13 @@ const s = {
     borderRadius: 6,
     border: "1px solid rgba(158,200,255,0.3)",
   } as React.CSSProperties,
-  tabs: {
+  tabs: (mobile = false): React.CSSProperties => ({
     background: "#fff",
     borderBottom: "1px solid #dde3ec",
     display: "flex",
-    padding: "0 40px",
+    padding: mobile ? "0 12px" : "0 40px",
     overflowX: "auto" as const,
-  } as React.CSSProperties,
+  }),
   tab: (a: boolean): React.CSSProperties => ({
     padding: "14px 20px",
     cursor: "pointer",
@@ -121,20 +136,20 @@ const s = {
     whiteSpace: "nowrap",
     transition: "color .15s",
   }),
-  main: {
-    maxWidth: 1100,
+  main: (mobile = false): React.CSSProperties => ({
+    maxWidth: mobile ? "100%" : 1100,
     margin: "0 auto",
-    padding: "32px 24px",
+    padding: mobile ? "16px 12px" : "32px 24px",
     display: "grid",
-    gridTemplateColumns: "340px 1fr",
-    gap: 24,
+    gridTemplateColumns: mobile ? "1fr" : "340px 1fr",
+    gap: mobile ? 16 : 24,
     alignItems: "start",
-  } as React.CSSProperties,
-  mainWide: {
-    maxWidth: 900,
+  }),
+  mainWide: (mobile = false): React.CSSProperties => ({
+    maxWidth: mobile ? "100%" : 900,
     margin: "0 auto",
-    padding: "32px 24px",
-  } as React.CSSProperties,
+    padding: mobile ? "16px 12px" : "32px 24px",
+  }),
   panel: {
     background: "#fff",
     borderRadius: 10,
@@ -385,6 +400,7 @@ const MP_DEFAULT_DATA: Record<string, string> = {
 // ── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const mobile = useIsMobile();
   const [activeExample, setActiveExample] = useState<ExampleId>("basic");
   const [templateBuffer, setTemplateBuffer] = useState<
     ArrayBuffer | undefined
@@ -543,8 +559,9 @@ export default function App() {
 
     return (
       <div style={s.layout}>
-        <Header />
+        <Header mobile={mobile} />
         <Tabs
+          mobile={mobile}
           active={activeExample}
           onSelect={(id) => {
             setActiveExample(id);
@@ -552,15 +569,17 @@ export default function App() {
             setUploadActiveField(undefined);
           }}
         />
-        <main style={s.main}>
+        <main style={s.main(mobile)}>
           {/* Left: file upload + dynamic fields */}
           <div
             style={{
               ...s.panel,
-              maxHeight: "85vh",
-              overflowY: "auto",
-              position: "sticky" as const,
-              top: 16,
+              ...(!mobile && {
+                maxHeight: "85vh",
+                overflowY: "auto" as const,
+                position: "sticky" as const,
+                top: 16,
+              }),
             }}
           >
             <p style={s.desc}>{uploadExample.description}</p>
@@ -702,10 +721,12 @@ export default function App() {
           <div
             style={{
               ...s.panel,
-              maxHeight: "85vh",
-              overflowY: "auto",
-              position: "sticky" as const,
-              top: 16,
+              ...(!mobile && {
+                maxHeight: "85vh",
+                overflowY: "auto" as const,
+                position: "sticky" as const,
+                top: 16,
+              }),
             }}
           >
             {uploadedBuffer ? (
@@ -867,23 +888,26 @@ export default function App() {
 
     return (
       <div style={s.layout}>
-        <Header />
+        <Header mobile={mobile} />
         <Tabs
+          mobile={mobile}
           active={activeExample}
           onSelect={(id) => {
             setActiveExample(id);
             setInlineEditor(null);
           }}
         />
-        <main style={s.main}>
+        <main style={s.main(mobile)}>
           {/* Left: form grouped by page */}
           <div
             style={{
               ...s.panel,
-              maxHeight: "85vh",
-              overflowY: "auto",
-              position: "sticky" as const,
-              top: 16,
+              ...(!mobile && {
+                maxHeight: "85vh",
+                overflowY: "auto" as const,
+                position: "sticky" as const,
+                top: 16,
+              }),
             }}
           >
             <p style={s.desc}>{currentExample.description}</p>
@@ -975,10 +999,12 @@ export default function App() {
           <div
             style={{
               ...s.panel,
-              maxHeight: "85vh",
-              overflowY: "auto",
-              position: "sticky" as const,
-              top: 16,
+              ...(!mobile && {
+                maxHeight: "85vh",
+                overflowY: "auto" as const,
+                position: "sticky" as const,
+                top: 16,
+              }),
             }}
           >
             {multiPageBuffer ? (
@@ -1008,8 +1034,9 @@ export default function App() {
   if (isInlineEditMode) {
     return (
       <div style={s.layout}>
-        <Header />
+        <Header mobile={mobile} />
         <Tabs
+          mobile={mobile}
           active={activeExample}
           onSelect={(id) => {
             setActiveExample(id);
@@ -1017,7 +1044,7 @@ export default function App() {
             setActiveField(undefined);
           }}
         />
-        <div style={s.mainWide}>
+        <div style={s.mainWide(mobile)}>
           <div style={s.panel}>
             <p style={s.desc}>{currentExample.description}</p>
             <div
@@ -1083,15 +1110,16 @@ export default function App() {
   // ── Standard two-column layout ──────────────────────────────────────────
   return (
     <div style={s.layout}>
-      <Header />
+      <Header mobile={mobile} />
       <Tabs
+        mobile={mobile}
         active={activeExample}
         onSelect={(id) => {
           setActiveExample(id);
           setInlineEditor(null);
         }}
       />
-      <main style={s.main}>
+      <main style={s.main(mobile)}>
         {/* Left: form */}
         <div style={s.panel}>
           <p style={s.desc}>{currentExample.description}</p>
@@ -1176,9 +1204,9 @@ export default function App() {
 
 // ── Shared sub-components ─────────────────────────────────────────────────────
 
-function Header() {
+function Header({ mobile = false }: { mobile?: boolean }) {
   return (
-    <header style={s.header}>
+    <header style={s.header(mobile)}>
       <div>
         <h1 style={s.h1}>react-pdf-form-preview</h1>
         <p style={s.sub}>Fill and preview PDF AcroForm documents in React</p>
@@ -1208,12 +1236,14 @@ function Header() {
 function Tabs({
   active,
   onSelect,
+  mobile = false,
 }: {
   active: ExampleId;
   onSelect: (id: ExampleId) => void;
+  mobile?: boolean;
 }) {
   return (
-    <nav style={s.tabs}>
+    <nav style={s.tabs(mobile)}>
       {EXAMPLES.map((ex) => (
         <button
           key={ex.id}
