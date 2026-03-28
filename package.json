@@ -1,6 +1,6 @@
 {
   "name": "react-pdf-form-preview",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React component to fill PDF form fields and live-preview the result. Load a PDF template with AcroForm fields, pass data, and see changes instantly on canvas. Supports text fields, checkboxes, dropdowns, field highlighting, custom fonts, inline editing, Next.js, and PDF download.",
   "keywords": [
     "react",
