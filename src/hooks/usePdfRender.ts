@@ -65,7 +65,7 @@ export function usePdfRender({ pdfDoc, numPages, scale, loading }: Options): Pdf
           ctx.imageSmoothingEnabled  = true;
           ctx.imageSmoothingQuality  = "high";
 
-          await page.render({ canvas: off, canvasContext: ctx, viewport }).promise;
+          await page.render({ canvasContext: ctx, viewport }).promise;
 
           if (!cancelled) offscreens.set(pageNum, off);
         } catch (err: unknown) {

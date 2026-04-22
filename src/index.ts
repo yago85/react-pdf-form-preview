@@ -5,8 +5,10 @@ export type {
   DataTransformer,
   DataTransformerOptions,
   FieldHighlight,
+  FieldLabelSource,
   FormData,
   FormFieldValue,
+  FieldLabels,
   PdfFormData,
 } from "./types";
 export { distributeTextToLines } from "./utils";

@@ -24,6 +24,9 @@ export interface FieldHighlight {
   color: string;
 }
 
+export type FieldLabels = Record<string, string>;
+export type FieldLabelSource = "manual-first" | "pdf-first" | "manual-only" | "pdf-only";
+
 export interface AcroFormPreviewProps {
   /** URL to fetch the PDF template */
   templateUrl?: string;
@@ -66,6 +69,10 @@ export interface AcroFormPreviewProps {
   visiblePages?: number[];
   /** Auto-highlight all AcroForm fields (filled / empty / active) */
   highlightAllFields?: boolean;
+  /** Human-readable field labels for accessibility and optional overlay labels */
+  fieldLabels?: FieldLabels;
+  /** Controls whether labels come from manual overrides, PDF metadata, or both */
+  fieldLabelSource?: FieldLabelSource;
   /** Name of the currently focused field (highlighted blue) */
   activeField?: string;
   /** Field names to exclude from auto-highlighting */

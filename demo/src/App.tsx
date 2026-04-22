@@ -251,6 +251,10 @@ const FORM_FIELDS = [
   { name: "client_sign", label: "Client signature" },
 ];
 
+const FIELD_LABELS = Object.fromEntries(
+  FORM_FIELDS.map((field) => [field.name, field.label]),
+);
+
 const DEFAULT_DATA: Record<string, string> = {
   doc_number: "AGR-2025-001",
   doc_date: "01.01.2025",
@@ -523,7 +527,7 @@ export default function App() {
       const r3 = fieldRectsRef.current.get("service_desc_3");
 
       if (pageSize && r3) {
-        const { width: W, height: H } = pageSize;
+        const { height: H } = pageSize;
         // Last derived field's bottom edge in % (PDF y is bottom-left: y1 = bottom)
         const lastRect = r3.rect;
         const bottomPct = ((H - lastRect[1]) / H) * 100;
@@ -734,6 +738,8 @@ export default function App() {
                 activeField={uploadActiveField}
                 data={uploadedData}
                 debounceMs={150}
+                fieldLabels={FIELD_LABELS}
+                fieldLabelSource="pdf-first"
                 fontSrc="/react-pdf-form-preview/fonts/Roboto-Regular.ttf"
                 highlightAllFields
                 scale={1.6}
@@ -828,6 +834,8 @@ export default function App() {
         dataTransformer={serviceTransformer}
         debounceMs={150}
         fieldsRequiringRecalculation={["service_desc"]}
+        fieldLabels={FIELD_LABELS}
+        fieldLabelSource="pdf-first"
         fontSrc="/react-pdf-form-preview/fonts/Roboto-Regular.ttf"
         hiddenFields={DERIVED_FIELDS}
         highlightAllFields={!manualHighlights}
@@ -1014,6 +1022,8 @@ export default function App() {
                 debounceMs={150}
                 fontSrc="/react-pdf-form-preview/fonts/Roboto-Regular.ttf"
                 highlightAllFields
+                fieldLabels={FIELD_LABELS}
+                fieldLabelSource="pdf-first"
                 scale={1.6}
                 templateBuffer={multiPageBuffer}
                 visiblePages={visiblePage ? [visiblePage] : undefined}

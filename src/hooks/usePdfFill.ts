@@ -1,7 +1,7 @@
 import { PDFFont } from "pdf-lib";
 import * as pdfjsLib from "pdfjs-dist";
 import { useEffect, useRef, useState } from "react";
-import { DataTransformer, PdfFormData } from "../types";
+import { DataTransformer, FieldLabels, PdfFormData } from "../types";
 
 function hasRecalculationFieldsChanged(
   current: PdfFormData,
@@ -41,8 +41,39 @@ export interface PdfFillResult {
   loading: boolean;
   error: string | null;
   filledDataRef: React.MutableRefObject<PdfFormData>;
+  pdfFieldLabelsRef: React.MutableRefObject<FieldLabels>;
   fieldRectsRef: React.MutableRefObject<Map<string, { page: number; rect: number[] }>>;
   pageViewportsRef: React.MutableRefObject<Map<number, { width: number; height: number }>>;
+}
+
+function readPdfFieldLabel(field: any, pdfLib: any): string | undefined {
+  const { PDFHexString, PDFName, PDFString } = pdfLib;
+  type DecodablePdfText = { decodeText: () => string };
+  const decodeMaybeText = (value: unknown): string | undefined => {
+    if (value instanceof PDFString) {
+      const text = (value as DecodablePdfText).decodeText().trim();
+      return text || undefined;
+    }
+    if (value instanceof PDFHexString) {
+      const text = (value as DecodablePdfText).decodeText().trim();
+      return text || undefined;
+    }
+    return undefined;
+  };
+
+  const dict = field?.acroField?.dict;
+  if (!dict || !PDFName) return undefined;
+
+  const tooltip = decodeMaybeText(
+    dict.lookupMaybe(PDFName.of("TU"), PDFString, PDFHexString),
+  );
+  if (tooltip) return tooltip;
+
+  const mappingName = decodeMaybeText(
+    dict.lookupMaybe(PDFName.of("TM"), PDFString, PDFHexString),
+  );
+  if (mappingName) return mappingName;
+  return undefined;
 }
 
 export function usePdfFill({
@@ -74,6 +105,7 @@ export function usePdfFill({
 
   const isInitialLoadRef     = useRef(true);
   const filledDataRef        = useRef<PdfFormData>({});
+  const pdfFieldLabelsRef    = useRef<FieldLabels>({});
   const previousDataRef      = useRef<PdfFormData>({});
   const previousFormDataRef  = useRef<PdfFormData>({});
   const fieldRectsRef        = useRef<Map<string, { page: number; rect: number[] }>>(new Map());
@@ -131,6 +163,16 @@ export function usePdfFill({
         pdfLibDoc.registerFontkit(fontkit);
         const customFont = await pdfLibDoc.embedFont(fontBytes);
         const form = pdfLibDoc.getForm();
+
+        if (isInitialLoad) {
+          const nextPdfFieldLabels: FieldLabels = {};
+          for (const field of form.getFields()) {
+            const fieldName = field.getName();
+            const label = readPdfFieldLabel(field, pdfLib);
+            if (label) nextPdfFieldLabels[fieldName] = label;
+          }
+          pdfFieldLabelsRef.current = nextPdfFieldLabels;
+        }
 
         // Selective recalculation
         const needsRecalc = hasRecalculationFieldsChanged(
@@ -198,8 +240,11 @@ export function usePdfFill({
               field.setFontSize(fontSize);
               field.updateAppearances(customFont);
             } else if (field instanceof PDFCheckBox) {
-              value === "true" || value === "1" || value === 1 || value === true
-                ? field.check() : field.uncheck();
+              if (value === "true" || value === "1" || value === 1 || value === true) {
+                field.check();
+              } else {
+                field.uncheck();
+              }
             } else if (field instanceof PDFDropdown) {
               field.select(String(value));
             }
@@ -276,5 +321,7 @@ export function usePdfFill({
   // Destroy pdfjs document on unmount
   useEffect(() => () => { pdfDoc?.destroy(); }, [pdfDoc]);
 
-  return { pdfDoc, numPages, loading, error, filledDataRef, fieldRectsRef, pageViewportsRef };
+  return {
+    pdfDoc, numPages, loading, error, filledDataRef, pdfFieldLabelsRef, fieldRectsRef, pageViewportsRef,
+  };
 }

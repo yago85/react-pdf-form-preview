@@ -3,7 +3,7 @@
  * No external PDF file needed — the demo is fully self-contained.
  */
 
-import { PDFDocument, StandardFonts, rgb, degrees } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 
 export interface SamplePdfField {
   name: string;

@@ -23,10 +23,8 @@ describe("FieldHighlightOverlay", () => {
         pageSize={pageSize}
       />,
     );
-    const boxes = container.querySelectorAll("[title]");
+    const boxes = container.querySelectorAll("[aria-hidden='true']");
     expect(boxes).toHaveLength(2);
-    expect(boxes[0].getAttribute("title")).toBe("name");
-    expect(boxes[1].getAttribute("title")).toBe("email");
   });
 
   it("does not render fields from other pages", () => {
@@ -38,13 +36,13 @@ describe("FieldHighlightOverlay", () => {
         pageSize={pageSize}
       />,
     );
-    const boxes = container.querySelectorAll("[title]");
+    const boxes = container.querySelectorAll("[aria-hidden='true']");
     expect(boxes).toHaveLength(0);
   });
 
   it("calls onFieldClick when a field box is clicked", () => {
     const onClick = vi.fn();
-    const { container } = render(
+    const { getByRole } = render(
       <FieldHighlightOverlay
         pageNum={1}
         highlights={[{ fieldName: "name", color: "#ff0000" }]}
@@ -53,14 +51,14 @@ describe("FieldHighlightOverlay", () => {
         onFieldClick={onClick}
       />,
     );
-    const box = container.querySelector("[title='name']")!;
+    const box = getByRole("button", { name: /field: name/i });
     fireEvent.click(box);
     expect(onClick).toHaveBeenCalledWith("name");
   });
 
   it("calls onFieldDoubleClick with field rect percentages", () => {
     const onDblClick = vi.fn();
-    const { container } = render(
+    const { getByRole } = render(
       <FieldHighlightOverlay
         pageNum={1}
         highlights={[{ fieldName: "name", color: "#ff0000" }]}
@@ -69,7 +67,7 @@ describe("FieldHighlightOverlay", () => {
         onFieldDoubleClick={onDblClick}
       />,
     );
-    const box = container.querySelector("[title='name']")!;
+    const box = getByRole("button", { name: /field: name/i });
     fireEvent.doubleClick(box);
     expect(onDblClick).toHaveBeenCalledWith("name", expect.objectContaining({
       left: expect.any(Number),
@@ -87,14 +85,15 @@ describe("FieldHighlightOverlay", () => {
         fieldRects={fieldRects}
         pageSize={pageSize}
         showLabels
+        fieldLabels={{ name: "Full name" }}
       />,
     );
-    expect(getByText("name")).toBeTruthy();
+    expect(getByText("Full name")).toBeTruthy();
   });
 
   it("highlights active field differently from filled/empty", () => {
     const filledData = { name: "John", email: "" };
-    const { container } = render(
+    const { getByRole } = render(
       <FieldHighlightOverlay
         pageNum={1}
         highlights={[
@@ -105,11 +104,11 @@ describe("FieldHighlightOverlay", () => {
         pageSize={pageSize}
         filledData={filledData}
         activeField="name"
+        onFieldClick={() => {}}
       />,
     );
-    const boxes = container.querySelectorAll("[title]");
-    const nameBox = boxes[0] as HTMLElement;
-    const emailBox = boxes[1] as HTMLElement;
+    const nameBox = getByRole("button", { name: /active field: name/i }) as HTMLElement;
+    const emailBox = getByRole("button", { name: /empty field: email/i }) as HTMLElement;
     // Active field should have blue background
     expect(nameBox.style.backgroundColor).toContain("59");
     expect(nameBox.style.backgroundColor).toContain("130");
@@ -128,8 +127,51 @@ describe("FieldHighlightOverlay", () => {
         pageSize={pageSize}
       />,
     );
-    const box = container.querySelector("[title='name']") as HTMLElement;
+    const box = container.querySelector("[aria-hidden='true']") as HTMLElement;
     // Should fall back to #888888, not use the malicious value
     expect(box.style.backgroundColor).not.toContain("javascript");
+  });
+
+  it("exposes keyboard support for select and edit actions", () => {
+    const onClick = vi.fn();
+    const onDblClick = vi.fn();
+    const { getByRole } = render(
+      <FieldHighlightOverlay
+        pageNum={1}
+        highlights={[{ fieldName: "name", color: "#ff0000" }]}
+        fieldRects={fieldRects}
+        pageSize={pageSize}
+        onFieldClick={onClick}
+        onFieldDoubleClick={onDblClick}
+      />,
+    );
+    const box = getByRole("button", { name: /press enter or space to select\. press f2 to edit\./i });
+
+    fireEvent.keyDown(box, { key: "Enter" });
+    fireEvent.keyDown(box, { key: " " });
+    fireEvent.keyDown(box, { key: "F2" });
+
+    expect(onClick).toHaveBeenCalledTimes(2);
+    expect(onDblClick).toHaveBeenCalledWith("name", expect.objectContaining({
+      left: expect.any(Number),
+      top: expect.any(Number),
+      width: expect.any(Number),
+      height: expect.any(Number),
+    }));
+  });
+
+  it("uses human-readable field labels for accessible names", () => {
+    const { getByRole } = render(
+      <FieldHighlightOverlay
+        pageNum={1}
+        highlights={[{ fieldName: "name", color: "#ff0000" }]}
+        fieldRects={fieldRects}
+        pageSize={pageSize}
+        fieldLabels={{ name: "Full name" }}
+        onFieldClick={() => {}}
+      />,
+    );
+
+    expect(getByRole("button", { name: /field: full name\./i })).toBeTruthy();
   });
 });

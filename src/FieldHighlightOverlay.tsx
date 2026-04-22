@@ -1,11 +1,15 @@
 import React from "react";
-import { FieldHighlight, FormFieldValue } from "./types";
+import { FieldHighlight, FieldLabels, FormFieldValue } from "./types";
 
 /** Allows only safe CSS color formats: #hex, rgb(), rgba(), hsl(), named colors */
 const SAFE_COLOR_RE = /^(#[0-9a-fA-F]{3,8}|rgb\([^)]*\)|rgba\([^)]*\)|hsl\([^)]*\)|hsla\([^)]*\)|[a-zA-Z]{2,30})$/;
 
 function sanitizeColor(color: string, fallback = "#888888"): string {
   return SAFE_COLOR_RE.test(color.trim()) ? color.trim() : fallback;
+}
+
+function hasMeaningfulValue(value: FormFieldValue): boolean {
+  return value !== undefined && value !== null && value !== "";
 }
 
 interface Props {
@@ -15,6 +19,7 @@ interface Props {
   /** Page size in PDF points (at scale=1) */
   pageSize: { width: number; height: number };
   showLabels?: boolean;
+  fieldLabels?: FieldLabels;
   onFieldClick?: (fieldName: string) => void;
   /** Auto-mode: derive highlight style from fill status */
   filledData?: Record<string, FormFieldValue>;
@@ -31,6 +36,7 @@ const FieldHighlightOverlay: React.FC<Props> = ({
   fieldRects,
   pageSize,
   showLabels,
+  fieldLabels,
   onFieldClick,
   filledData,
   activeField,
@@ -74,11 +80,27 @@ const FieldHighlightOverlay: React.FC<Props> = ({
         border  = `2px solid ${safeColor}`;
       }
 
+      const isInteractive = !!(onFieldClick || onFieldDoubleClick);
+      const isActive = activeField === h.fieldName;
+      const isFilled = filledData ? hasMeaningfulValue(filledData[h.fieldName]) : undefined;
+      const readableName = fieldLabels?.[h.fieldName] ?? h.fieldName;
+      const statusText = isActive ? "Active field" : isFilled === undefined ? "Field" : isFilled ? "Filled field" : "Empty field";
+      const actionText = !isInteractive
+        ? ""
+        : onFieldClick && onFieldDoubleClick
+          ? " Press Enter or Space to select. Press F2 to edit."
+          : onFieldDoubleClick
+            ? " Press F2 to edit."
+            : " Press Enter or Space to select.";
+
       return (
-        // eslint-disable-next-line jsx-a11y/click-events-have-key-events
         <div
           key={h.fieldName}
-          title={h.fieldName}
+          role={isInteractive ? "button" : undefined}
+          tabIndex={isInteractive ? 0 : undefined}
+          aria-hidden={isInteractive ? undefined : true}
+          aria-label={isInteractive ? `${statusText}: ${readableName}.${actionText}` : undefined}
+          aria-keyshortcuts={isInteractive ? onFieldDoubleClick ? "Enter Space F2" : "Enter Space" : undefined}
           style={{
             position: "absolute",
             left: `${leftPct}%`, top: `${topPct}%`,
@@ -87,8 +109,8 @@ const FieldHighlightOverlay: React.FC<Props> = ({
             border,
             borderRadius: 2,
             overflow: "hidden",
-            cursor: (onFieldClick || onFieldDoubleClick) ? "pointer" : "default",
-            pointerEvents: (onFieldClick || onFieldDoubleClick) ? "auto" : "none",
+            cursor: isInteractive ? "pointer" : "default",
+            pointerEvents: isInteractive ? "auto" : "none",
             transition: "background 0.2s, border-color 0.2s",
           }}
           onClick={() => onFieldClick?.(h.fieldName)}
@@ -97,16 +119,29 @@ const FieldHighlightOverlay: React.FC<Props> = ({
               left: leftPct, top: topPct, width: widthPct, height: heightPct,
             })
           }
+          onKeyDown={(e) => {
+            if (onFieldDoubleClick && e.key === "F2") {
+              e.preventDefault();
+              onFieldDoubleClick(h.fieldName, {
+                left: leftPct, top: topPct, width: widthPct, height: heightPct,
+              });
+              return;
+            }
+            if ((e.key === "Enter" || e.key === " ") && onFieldClick) {
+              e.preventDefault();
+              onFieldClick(h.fieldName);
+            }
+          }}
         >
           {showLabels && (
-            <span style={{
+            <span aria-hidden="true" style={{
               pointerEvents: "none",
               display: "flex", alignItems: "center",
               height: "100%", padding: "0 4px",
               fontSize: 10, fontWeight: 700, color: "#000",
               overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis",
             }}>
-              {h.fieldName}
+              {readableName}
             </span>
           )}
         </div>

@@ -120,6 +120,8 @@ export default function MyPage() {
 | `maxWidth`                     | `string`                                              | `"810px"`                 | CSS `max-width` of the container                                                                       |
 | `debounceMs`                   | `number`                                              | `200`                     | Debounce before re-render when data changes                                                            |
 | `highlightAllFields`           | `boolean`                                             | `false`                   | Auto-highlight all AcroForm fields                                                                     |
+| `fieldLabels`                  | `Record<string, string>`                              | —                         | Human-readable labels used for accessibility announcements and overlay labels                           |
+| `fieldLabelSource`             | `"manual-first" \| "pdf-first" \| "manual-only" \| "pdf-only"` | `"manual-first"` | Chooses whether labels come from manual overrides, PDF metadata (`TU`/tooltip), or both                |
 | `activeField`                  | `string`                                              | —                         | Field name highlighted in blue (focused)                                                               |
 | `hiddenFields`                 | `Set<string>`                                         | —                         | Fields excluded from auto-highlighting                                                                 |
 | `highlightFields`              | `FieldHighlight[]`                                    | —                         | Manual highlight list `{ fieldName, color }`                                                           |
@@ -143,9 +145,39 @@ export default function MyPage() {
   templateUrl="/templates/contract.pdf"
   workerSrc="/pdf.worker.min.mjs"
   data={{ buyer_name: "John Smith", contract_date: "01.01.2025" }}
+  fieldLabels={{ buyer_name: "Buyer name", contract_date: "Contract date" }}
   highlightAllFields
 />
 ```
+
+Use `fieldLabels` when your PDF field IDs are technical names like `client_name` or `doc_number` but screen readers should announce readable text such as `Client name` or `Document number`.
+
+If your PDF already contains AcroForm tooltips / alternate names, the component can use them automatically. By default `fieldLabels` override PDF metadata:
+
+```tsx
+<AcroFormPreview
+  templateUrl="/templates/contract.pdf"
+  workerSrc="/pdf.worker.min.mjs"
+  data={formData}
+  fieldLabels={{ client_name: "Client name" }}
+  fieldLabelSource="manual-first"
+  highlightAllFields
+/>
+```
+
+To prefer labels embedded in the PDF itself:
+
+```tsx
+<AcroFormPreview
+  templateUrl="/templates/contract.pdf"
+  workerSrc="/pdf.worker.min.mjs"
+  data={formData}
+  fieldLabelSource="pdf-first"
+  highlightAllFields
+/>
+```
+
+`pdf-first` means: first use human-readable PDF metadata (`TU` / tooltip / alternate name, then `TM`), then `fieldLabels`, and only then fall back to the raw field name. Raw field IDs such as `client_name` are **not** treated as PDF metadata labels.
 
 #### Example 2 — Active field (form + preview side by side)
 
@@ -526,6 +558,8 @@ export default function MyPage() {
 | `maxWidth`                     | `string`                                              | `"810px"`        | CSS `max-width` контейнера                                                                                      |
 | `debounceMs`                   | `number`                                              | `200`            | Задержка перед повторным рендером                                                                               |
 | `highlightAllFields`           | `boolean`                                             | `false`          | Автоподсветка всех AcroForm-полей                                                                               |
+| `fieldLabels`                  | `Record<string, string>`                              | —                | Человекочитаемые подписи для accessibility-объявлений и overlay-меток                                            |
+| `fieldLabelSource`             | `"manual-first" \| "pdf-first" \| "manual-only" \| "pdf-only"` | `"manual-first"` | Определяет, откуда брать подписи: из ручных override, из metadata PDF (`TU`/tooltip) или из обоих источников |
 | `activeField`                  | `string`                                              | —                | Активное поле (синяя подсветка)                                                                                 |
 | `hiddenFields`                 | `Set<string>`                                         | —                | Поля, исключённые из подсветки                                                                                  |
 | `highlightFields`              | `FieldHighlight[]`                                    | —                | Ручная подсветка `{ fieldName, color }`                                                                         |
@@ -549,9 +583,39 @@ export default function MyPage() {
   templateUrl="/templates/dogovor.pdf"
   workerSrc="/pdf.worker.min.mjs"
   data={{ buyer_name: "Иванов И.И.", contract_date: "01.01.2025" }}
+  fieldLabels={{ buyer_name: "Имя покупателя", contract_date: "Дата договора" }}
   highlightAllFields
 />
 ```
+
+Используй `fieldLabels`, если внутренние имена PDF-полей вроде `client_name` или `doc_number` нужно озвучивать пользователю человекочитаемо, например как `Client name` или `Document number`.
+
+Если в самом PDF уже заполнены AcroForm tooltips / alternate names, компонент умеет использовать и их. По умолчанию `fieldLabels` имеют приоритет над metadata PDF:
+
+```tsx
+<AcroFormPreview
+  templateUrl="/templates/dogovor.pdf"
+  workerSrc="/pdf.worker.min.mjs"
+  data={formData}
+  fieldLabels={{ client_name: "Имя клиента" }}
+  fieldLabelSource="manual-first"
+  highlightAllFields
+/>
+```
+
+Если нужно предпочитать подписи, встроенные в PDF:
+
+```tsx
+<AcroFormPreview
+  templateUrl="/templates/dogovor.pdf"
+  workerSrc="/pdf.worker.min.mjs"
+  data={formData}
+  fieldLabelSource="pdf-first"
+  highlightAllFields
+/>
+```
+
+`pdf-first` означает: сначала использовать человекочитаемую metadata из PDF (`TU` / tooltip / alternate name, затем `TM`), потом `fieldLabels`, и только затем raw имя поля. Технические идентификаторы вроде `client_name` **не** считаются metadata-подписями PDF.
 
 #### Пример 2 — Активное поле (форма + предпросмотр рядом)
 
