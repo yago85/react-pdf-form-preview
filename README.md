@@ -32,6 +32,7 @@ There is no single library that lets you **fill a PDF template and show a live p
 - **Double-buffered rendering** — pages render off-screen, then swap in one frame — zero flicker
 - **Field highlight overlay** — visual layer over the canvas: blue = active, yellow = filled, grey = empty
 - **Inline editing** — double-click a field in the preview to edit it directly in the PDF
+- **Accessibility support** — screen-reader announcements, keyboard-focusable overlays, and hybrid field labels from manual names and PDF metadata
 - **Download filled PDF** — get the filled PDF as `Uint8Array` to download or send to a server
 - **Custom fonts** — embed any `.ttf` / `.woff2` font (Cyrillic, CJK, Arabic, etc.)
 - **Retina / HiDPI** — sharp rendering on high-DPI screens
@@ -178,6 +179,48 @@ To prefer labels embedded in the PDF itself:
 ```
 
 `pdf-first` means: first use human-readable PDF metadata (`TU` / tooltip / alternate name, then `TM`), then `fieldLabels`, and only then fall back to the raw field name. Raw field IDs such as `client_name` are **not** treated as PDF metadata labels.
+
+### Accessibility
+
+For accessible usage, combine these props:
+
+- `highlightAllFields` to expose field overlays
+- `fieldLabels` to provide human-readable names for screen readers
+- `fieldLabelSource` to control whether labels come from manual overrides, PDF metadata, or both
+- `activeField` to announce which field is currently focused in your external form
+- `onFieldClick` and/or `onFieldDoubleClick` to make field overlays keyboard-focusable and interactive
+
+Recommended setup when the PDF is controlled by your app:
+
+```tsx
+<AcroFormPreview
+  templateUrl="/templates/contract.pdf"
+  workerSrc="/pdf.worker.min.mjs"
+  data={formData}
+  highlightAllFields
+  fieldLabels={{
+    client_name: "Client name",
+    client_email: "Client email",
+    service_desc: "Service description",
+  }}
+  fieldLabelSource="manual-first"
+  activeField={activeField}
+  onFieldDoubleClick={(fieldName, rect) => {
+    setEditor({ fieldName, rect });
+    setActiveField(fieldName);
+  }}
+/>
+```
+
+What this gives you:
+
+- screen readers hear readable field names instead of raw PDF IDs
+- the component announces PDF load state and active field status through a live region
+- interactive overlays become keyboard-focusable
+- `Enter` and `Space` trigger field selection
+- `F2` triggers inline editing when `onFieldDoubleClick` is provided
+
+If your PDF already contains good AcroForm tooltips / alternate names, you can rely more on PDF metadata with `fieldLabelSource="pdf-first"`.
 
 #### Example 2 — Active field (form + preview side by side)
 
@@ -470,6 +513,7 @@ The user never sees a blank or partially-drawn frame between updates.
 - **Двойная буферизация рендеринга** — страницы рисуются за кадром и подменяются за один кадр — без мерцания
 - **Overlay-подсветка полей** — визуальный слой поверх canvas: синий = активное, жёлтый = заполнено, серый = пусто
 - **Инлайн-редактирование** — двойной клик по полю в превью для редактирования прямо в PDF
+- **Accessibility support** — объявления для screen reader, keyboard-focusable overlay и гибридные названия полей из ручных label и metadata PDF
 - **Скачивание заполненного PDF** — получите `Uint8Array` для скачивания или отправки на сервер
 - **Произвольные шрифты** — подключите любой `.ttf` / `.woff2` (кириллица, CJK, арабский и др.)
 - **Retina / HiDPI** — чёткий рендеринг на экранах высокой плотности
@@ -616,6 +660,48 @@ export default function MyPage() {
 ```
 
 `pdf-first` означает: сначала использовать человекочитаемую metadata из PDF (`TU` / tooltip / alternate name, затем `TM`), потом `fieldLabels`, и только затем raw имя поля. Технические идентификаторы вроде `client_name` **не** считаются metadata-подписями PDF.
+
+### Accessibility
+
+Для доступного использования лучше комбинировать такие пропсы:
+
+- `highlightAllFields`, чтобы overlay полей вообще появился для accessibility
+- `fieldLabels`, чтобы screen reader озвучивал человекочитаемые названия
+- `fieldLabelSource`, чтобы выбрать приоритет между ручными label и metadata PDF
+- `activeField`, чтобы объявлять текущее активное поле из внешней формы
+- `onFieldClick` и/или `onFieldDoubleClick`, чтобы overlay стал интерактивным и доступным с клавиатуры
+
+Рекомендуемая конфигурация, если PDF контролируется твоим приложением:
+
+```tsx
+<AcroFormPreview
+  templateUrl="/templates/dogovor.pdf"
+  workerSrc="/pdf.worker.min.mjs"
+  data={formData}
+  highlightAllFields
+  fieldLabels={{
+    client_name: "Имя клиента",
+    client_email: "Email клиента",
+    service_desc: "Описание услуги",
+  }}
+  fieldLabelSource="manual-first"
+  activeField={activeField}
+  onFieldDoubleClick={(fieldName, rect) => {
+    setEditor({ fieldName, rect });
+    setActiveField(fieldName);
+  }}
+/>
+```
+
+Что это даёт:
+
+- screen reader озвучивает нормальные имена полей вместо raw PDF-идентификаторов
+- компонент объявляет загрузку PDF и статус активного поля через live region
+- интерактивные overlay становятся доступными с клавиатуры
+- `Enter` и `Space` запускают выбор поля
+- `F2` запускает inline editing, если передан `onFieldDoubleClick`
+
+Если в самом PDF уже есть хорошие AcroForm tooltips / alternate names, можно сильнее опираться на metadata через `fieldLabelSource="pdf-first"`.
 
 #### Пример 2 — Активное поле (форма + предпросмотр рядом)
 
